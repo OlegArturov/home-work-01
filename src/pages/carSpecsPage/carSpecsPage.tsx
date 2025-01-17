@@ -3,11 +3,11 @@ import {
   CarsArray,
   ICarModel,
   ICarVersion,
-} from "../../interfaces/carsPage/cars";
+} from "../../interfaces/carSpecsPage/cars";
 import { CARS } from "./carsMockData";
 import { capitalizeFirstLetter } from "../../helpers/capitalizeFirstLetterHelper";
 
-export const CarsPage = () => {
+export const CarSpecsPage = () => {
   const carsData: CarsArray = CARS;
 
   const renderCarModelsData = (models: ICarModel[]) => {

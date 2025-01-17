@@ -1,4 +1,4 @@
-import { CarsArray } from "../../interfaces/carsPage/cars";
+import { CarsArray } from "../../interfaces/carSpecsPage/cars";
 
 export const CARS: CarsArray = [
   {
