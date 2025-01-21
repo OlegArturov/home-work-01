@@ -1,0 +1,8 @@
+.table-row {
+  &--active {
+    td {
+      color: red;
+      font-weight: bold;
+    }
+  }
+}
