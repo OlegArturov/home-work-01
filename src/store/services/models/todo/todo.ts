@@ -2,6 +2,7 @@ export enum TaskStatusesEnum {
   STATUS_TODO = 0,
   STATUS_IN_PROGRESS,
   STATUS_DONE,
+  ON_HOLD,
 }
 
 export interface ITask {

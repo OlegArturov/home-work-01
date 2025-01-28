@@ -52,5 +52,5 @@ export const {
   useSetNewTaskStatusMutation,
   useCreateNewTaskMutation,
   useDeleteTaskMutation,
-  endpoints: { getTasks, setNewTaskStatus },
+  endpoints: { getTasks, setNewTaskStatus, createNewTask, deleteTask },
 } = todoApi;

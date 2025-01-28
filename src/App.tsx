@@ -4,6 +4,8 @@ import TasksBoardPage from "./pages/TasksBoardPage/TasksBoardPage";
 import { persistor, store } from "./store";
 import { PersistGate } from "redux-persist/integration/react";
 
+import "./i18n";
+
 function App() {
   return (
     <Provider store={store}>

@@ -8,6 +8,12 @@ import {
 
 import "./styles.scss";
 import { ITask, TaskStatusesEnum } from "../../store/services/models/todo/todo";
+import TodosForm from "./components/TodosForm/TodosForm";
+import { useTranslation } from "react-i18next";
+import { ISelectOption } from "../../components/Select/SelectTypes";
+import TodosList from "./components/TodosList/TodosList";
+import Button from "../../components/Button/Button";
+import { Box, Paper, Typography } from "@mui/material";
 
 export interface IActionBlock {
   title: string;
@@ -16,25 +22,50 @@ export interface IActionBlock {
 }
 
 export default function TasksBoardPage() {
-  const [actionBlocks, setActionBlocks] = useState<Array<IActionBlock>>([
-    {
-      title: "To Do",
-      action: TaskStatusesEnum.STATUS_TODO,
-      tasks: [],
-    },
-    {
-      title: "In Progress",
-      action: TaskStatusesEnum.STATUS_IN_PROGRESS,
-      tasks: [],
-    },
-    {
-      title: "Done",
-      action: TaskStatusesEnum.STATUS_DONE,
-      tasks: [],
-    },
-  ]);
+  const { t } = useTranslation("base_translations", {
+    keyPrefix: "pages.tasksBoardPage",
+  });
 
-  const [newTaskTitle, setNewTaskTitle] = useState<string>();
+  const getActionsBlockFromEnum = (): IActionBlock[] => {
+    const blocks = Object.entries(TaskStatusesEnum)
+      .filter(([key]) => isNaN(Number(key)))
+      .map(([key, value]) => ({
+        title: t(`actionBlocks.titles.${key}`),
+        action: value as TaskStatusesEnum,
+        tasks: [],
+      }));
+
+    const onHoldIndex = blocks.findIndex(
+      (block) => block.action === TaskStatusesEnum.ON_HOLD
+    );
+    if (onHoldIndex > -1) {
+      const [onHoldBlock] = blocks.splice(onHoldIndex, 1);
+      blocks.splice(1, 0, onHoldBlock);
+    }
+    return blocks;
+  };
+
+  const getStatusesForTodosFormSelect = (): ISelectOption[] => {
+    return Object.entries(TaskStatusesEnum)
+      .filter(
+        ([key, value]) =>
+          isNaN(Number(key)) && value !== TaskStatusesEnum.ON_HOLD
+      )
+      .map(([key, value]) => ({
+        value,
+        label: t(`todosForm.statusesSelectOptionTitles.${key}`),
+      }));
+  };
+
+  const [actionBlocks, setActionBlocks] = useState<Array<IActionBlock>>(
+    getActionsBlockFromEnum()
+  );
+
+  const [newTaskTitleForSubmit, setNewTaskTitleForSubmit] = useState<
+    string | undefined
+  >("");
+  const [newTaskStatusForSubmit, setNewTaskStatusForSubmit] =
+    useState<TaskStatusesEnum>(TaskStatusesEnum.STATUS_TODO);
 
   const {
     data: tasksData,
@@ -81,26 +112,49 @@ export default function TasksBoardPage() {
   }) => {
     let actionButtonText;
     let updatedStatus: TaskStatusesEnum;
-    const doneButtonText = "Done";
+    const doneButtonText = t("actionBlocks.actionButtons.done");
+    const inProgressButtonText = t("actionBlocks.actionButtons.inProgress");
+    const onHoldButtonText = t("actionBlocks.actionButtons.onHold");
+    const toDoButtonText = t("actionBlocks.actionButtons.toDo");
+    const toArchiveButtonText = t("actionBlocks.actionButtons.toArchive");
 
     switch (status) {
       case TaskStatusesEnum.STATUS_TODO:
-        actionButtonText = "In progress";
+        actionButtonText = inProgressButtonText;
         updatedStatus = TaskStatusesEnum.STATUS_IN_PROGRESS;
         break;
       case TaskStatusesEnum.STATUS_IN_PROGRESS:
-        actionButtonText = "To do";
+        actionButtonText = toDoButtonText;
+        updatedStatus = TaskStatusesEnum.STATUS_TODO;
+        break;
+      case TaskStatusesEnum.STATUS_DONE:
+        actionButtonText = toArchiveButtonText;
+        updatedStatus = TaskStatusesEnum.STATUS_DONE;
+        break;
+      case TaskStatusesEnum.ON_HOLD:
+        actionButtonText = toDoButtonText;
         updatedStatus = TaskStatusesEnum.STATUS_TODO;
         break;
       default:
-      case TaskStatusesEnum.STATUS_DONE:
-        actionButtonText = "To archive";
-        updatedStatus = TaskStatusesEnum.STATUS_DONE;
+        actionButtonText = "";
         break;
     }
+
+    const isInProgressStatus = status === TaskStatusesEnum.STATUS_IN_PROGRESS;
+    const isOnHoldStatus = status === TaskStatusesEnum.ON_HOLD;
     return (
-      <div className="action-block-buttons">
-        <button
+      <Box
+        sx={{
+          width: "50%",
+          display: "flex",
+          justifyContent: "flex-end",
+          flexWrap: "wrap",
+        }}
+      >
+        <Button
+          label={actionButtonText}
+          color="secondary"
+          type="button"
           onClick={() => {
             if (status === TaskStatusesEnum.STATUS_DONE) {
               deleteTask({ taskId: id });
@@ -108,32 +162,50 @@ export default function TasksBoardPage() {
               onActionButtonClick({ taskId: id, newStatus: updatedStatus });
             }
           }}
-        >
-          {actionButtonText}
-        </button>
-        {status === TaskStatusesEnum.STATUS_IN_PROGRESS && (
-          <button
+          sx={{ mt: "5px" }}
+        />
+        {(isInProgressStatus || isOnHoldStatus) && (
+          <Button
+            label={isInProgressStatus ? doneButtonText : inProgressButtonText}
+            color="secondary"
+            type="button"
             onClick={() =>
               onActionButtonClick({
                 taskId: id,
-                newStatus: TaskStatusesEnum.STATUS_DONE,
+                newStatus: isInProgressStatus
+                  ? TaskStatusesEnum.STATUS_DONE
+                  : TaskStatusesEnum.STATUS_IN_PROGRESS,
               })
             }
-          >
-            {doneButtonText}
-          </button>
+            sx={{ ml: "5px", mt: "5px" }}
+          />
         )}
-      </div>
+        {isInProgressStatus && (
+          <Button
+            label={onHoldButtonText}
+            color="secondary"
+            type="button"
+            onClick={() =>
+              onActionButtonClick({
+                taskId: id,
+                newStatus: TaskStatusesEnum.ON_HOLD,
+              })
+            }
+            sx={{ mt: "5px" }}
+          />
+        )}
+      </Box>
     );
   };
 
   const createNewTaskSubmit = () => {
-    if (newTaskTitle) {
+    if (newTaskTitleForSubmit && newTaskStatusForSubmit !== undefined) {
       createNewTask({
-        status: TaskStatusesEnum.STATUS_TODO,
-        title: newTaskTitle,
+        status: newTaskStatusForSubmit,
+        title: newTaskTitleForSubmit,
       });
-      setNewTaskTitle(undefined);
+      setNewTaskTitleForSubmit(undefined);
+      setNewTaskStatusForSubmit(TaskStatusesEnum.STATUS_TODO);
     }
   };
 
@@ -143,35 +215,45 @@ export default function TasksBoardPage() {
 
   return (
     <>
-      <div className="main-actions-wrapper">
+      <TodosForm
+        newTaskTitleForSubmit={newTaskTitleForSubmit}
+        newTaskStatusForSubmit={newTaskStatusForSubmit}
+        setNewTaskTitleForSubmit={setNewTaskTitleForSubmit}
+        setNewTaskStatusForSubmit={setNewTaskStatusForSubmit}
+        statusesForSelect={getStatusesForTodosFormSelect()}
+        onSubmit={() => createNewTaskSubmit()}
+      />
+      <Paper
+        sx={{
+          p: 2,
+          display: "flex",
+          width: "100%",
+          justifyContent: "space-between",
+          mt: 1,
+        }}
+      >
         {actionBlocks.map((actionBlock) => (
-          <div key={actionBlock.action} className="action-block">
-            <h3 className="action-block-title">
+          <Box
+            key={actionBlock.action}
+            sx={{
+              width: `calc((100% / ${actionBlocks.length}) - 10px)`,
+              border: "1px solid gray",
+              borderRadius: "12px",
+            }}
+          >
+            <Typography
+              variant="h3"
+              sx={{ p: 2, fontSize: "16px", fontWeight: 600 }}
+            >
               {actionBlock.title}: {actionBlock.tasks.length}
-            </h3>
-            <ul className="action-block-items-list">
-              {actionBlock.tasks.map((task) => (
-                <li key={task.id} className="action-block-item">
-                  <span className="action-block-item-title">{task.title}</span>
-                  {renderActionButton({ id: task.id, status: task.status })}
-                </li>
-              ))}
-            </ul>
-          </div>
+            </Typography>
+            <TodosList
+              renderActionButton={renderActionButton}
+              tasks={actionBlock.tasks}
+            />
+          </Box>
         ))}
-      </div>
-      <div className="create-task-form">
-        <input
-          defaultValue={newTaskTitle}
-          placeholder="name"
-          onChange={(e) => {
-            setNewTaskTitle(e.target.value);
-          }}
-        />
-        <button disabled={!newTaskTitle} onClick={() => createNewTaskSubmit()}>
-          Submit
-        </button>
-      </div>
+      </Paper>
     </>
   );
 }
