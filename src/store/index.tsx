@@ -2,7 +2,6 @@ import { configureStore, Middleware } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import commonSlice from "./reducers/commonSlice";
-import todoSlice from "./reducers/todoSlice";
 import { api } from "./services/api";
 import {
   FLUSH,
@@ -16,19 +15,18 @@ import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 
 const persistTodoConfig = {
-  key: "todos",
+  key: "common",
   version: 1,
   storage: storage,
 };
 
-const persistedTodoReducer = persistReducer(persistTodoConfig, todoSlice);
+const persistedComonReducer = persistReducer(persistTodoConfig, commonSlice);
 
 const middlewareList: Middleware[] = [api.middleware];
 
 export const store = configureStore({
   reducer: {
-    commonSlice,
-    todoSlice: persistedTodoReducer,
+    commonSlice: persistedComonReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>
