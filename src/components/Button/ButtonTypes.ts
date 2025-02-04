@@ -5,7 +5,7 @@ export interface IButtonProps {
   label: DefaultTFuncReturn;
   isFullWidth?: boolean;
   type: "button" | "submit" | "reset" | undefined;
-  color:
+  color?:
     | "primary"
     | "inherit"
     | "secondary"

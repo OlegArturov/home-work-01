@@ -6,7 +6,7 @@ export default function Button({
   label,
   isFullWidth,
   type,
-  color,
+  color = "primary",
   onClick,
   sx,
 }: IButtonProps) {
