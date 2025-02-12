@@ -2,16 +2,30 @@ import {
   IGetGithubUserReposResponseItem,
   IGitHubUserCompetitiveInfo,
 } from "../../../store/services/models/battle";
-import { BattlePageActions, BattlerPageActionTypes } from "./actions";
-import { IBattlerPaggeInitialState } from "./models/types";
+import {
+  BattlePageActions,
+  BattlerPageActionTypes,
+  ISetPlayerCompetitiveDataPayload,
+  ISetPlayerInputErrorPayload,
+  ISetPlayerPayload,
+} from "./actions";
+import { IBattlePagePlayer, IBattlerPaggeInitialState } from "./models/types";
 
 const initialState: IBattlerPaggeInitialState = {
-  firstPlayer: null,
-  secondPlayer: null,
-  firstPlayerInputError: null,
-  secondPlayerInputError: null,
-  firstPlayerCompetitiveData: null,
-  secondPlayerCompetitiveData: null,
+  players: [
+    {
+      id: "0",
+      mainInfo: null,
+      inputError: null,
+      competitiveData: null,
+    },
+    {
+      id: "1",
+      mainInfo: null,
+      inputError: null,
+      competitiveData: null,
+    },
+  ],
 };
 
 const calculateCompetitiveData = (
@@ -29,34 +43,57 @@ const calculateCompetitiveData = (
   return { followersCount, repositoriesStars, totalScore };
 };
 
+const updatePlayerMainInfo = (
+  prevPlayers: IBattlePagePlayer[],
+  { playerMainInfo, playerToUpdateId }: ISetPlayerPayload
+) => {
+  return prevPlayers.map((player) => ({
+    ...player,
+    mainInfo: player.id === playerToUpdateId ? playerMainInfo : player.mainInfo,
+  }));
+};
+
+const updatePlayerInputError = (
+  prevPlayers: IBattlePagePlayer[],
+  { error, playerToUpdateId }: ISetPlayerInputErrorPayload
+) => {
+  return prevPlayers.map((player) => ({
+    ...player,
+    inputError: player.id === playerToUpdateId ? error : player.inputError,
+  }));
+};
+
+const updatePlayerCompetitiveData = (
+  prevPlayers: IBattlePagePlayer[],
+  { reposData, playerToUpdateId }: ISetPlayerCompetitiveDataPayload
+) => {
+  return prevPlayers.map((player) => ({
+    ...player,
+    competitiveData:
+      player.id === playerToUpdateId
+        ? calculateCompetitiveData(player.mainInfo?.followers || 0, reposData)
+        : player.competitiveData,
+  }));
+};
 const reducer = (
   state: IBattlerPaggeInitialState = initialState,
   { type, payload }: BattlePageActions
 ): IBattlerPaggeInitialState => {
   switch (type) {
-    case BattlerPageActionTypes.SET_FIRST_PLAYER_FOR_DISPLAY:
-      return { ...state, firstPlayer: payload };
-    case BattlerPageActionTypes.SET_SECOND_PLAYER_FOR_DISPLAY:
-      return { ...state, secondPlayer: payload };
-    case BattlerPageActionTypes.SET_FIRST_PLAYER_INPUT_ERROR:
-      return { ...state, firstPlayerInputError: payload };
-    case BattlerPageActionTypes.SET_SECOND_PLAYER_INPUT_ERROR:
-      return { ...state, secondPlayerInputError: payload };
-    case BattlerPageActionTypes.SET_FIRST_PLAYER_COMPETITIVE_DATA:
+    case BattlerPageActionTypes.SET_PLAYER_FOR_DSPLAY:
       return {
         ...state,
-        firstPlayerCompetitiveData: calculateCompetitiveData(
-          state.firstPlayer?.followers || 0,
-          payload
-        ),
+        players: updatePlayerMainInfo(state.players, payload),
       };
-    case BattlerPageActionTypes.SET_SECOND_PLAYER_COMPETITIVE_DATA:
+    case BattlerPageActionTypes.SET_PLAYER_INPUT_ERROR:
       return {
         ...state,
-        secondPlayerCompetitiveData: calculateCompetitiveData(
-          state.secondPlayer?.followers || 0,
-          payload
-        ),
+        players: updatePlayerInputError(state.players, payload),
+      };
+    case BattlerPageActionTypes.SET_PLAYER_COMPETITIVE_DATA:
+      return {
+        ...state,
+        players: updatePlayerCompetitiveData(state.players, payload),
       };
     case BattlerPageActionTypes.RESET_STATE:
       return initialState;

@@ -27,8 +27,9 @@ export default function BattlePage() {
   } = useBattle();
 
   const handleOnBattleClick = () => {
-    getUsersRepos(state.firstPlayer?.login as string, 1);
-    getUsersRepos(state.secondPlayer?.login as string, 2);
+    state.players.forEach((player) => {
+      getUsersRepos(player.mainInfo?.login as string, player.id);
+    });
   };
 
   const handleOnRestartClick = () => {
@@ -56,8 +57,9 @@ export default function BattlePage() {
               {battlePageT("players_card.placement.draw")}
             </Typography>
           )}
-          <PlayersCard playerNumber={1} />
-          <PlayersCard playerNumber={2} />
+          {state.players.map((player) => (
+            <PlayersCard player={player} key={player.id} />
+          ))}
         </Box>
         <Box sx={styles.actionWrapper}>
           {(isBattleReady || isBattleFinished) && (

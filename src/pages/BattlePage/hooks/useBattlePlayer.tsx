@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { IBattlerPaggeInitialState } from "../store/models/types";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import React from "react";
 import { useLazyGetGitHubUserQuery } from "../../../store/services/battle";
 import {
   ISetPlayerForDisplay,
@@ -7,44 +7,11 @@ import {
 } from "../../../contexts/BattleContext";
 import { useTranslation } from "react-i18next";
 
-export default function useBattlePlayer(
-  playerNumber: number,
-  state: IBattlerPaggeInitialState
-) {
+export default function useBattlePlayer(playerId: string) {
   const { t: playersCardT } = useTranslation("base_translations", {
     keyPrefix: "pages.battle_page.players_card",
   });
   const [trigger] = useLazyGetGitHubUserQuery();
-
-  const currentUser = useMemo(
-    () => (playerNumber === 1 ? state?.firstPlayer : state?.secondPlayer),
-    [playerNumber, state?.firstPlayer, state?.secondPlayer]
-  );
-  const currentError = useMemo(
-    () =>
-      playerNumber === 1
-        ? state?.firstPlayerInputError
-        : state?.secondPlayerInputError,
-    [playerNumber, state?.firstPlayerInputError, state?.secondPlayerInputError]
-  );
-
-  const currentCompetitiveInfo = useMemo(
-    () =>
-      playerNumber === 1
-        ? {
-            current: state?.firstPlayerCompetitiveData,
-            rival: state?.secondPlayerCompetitiveData,
-          }
-        : {
-            current: state?.secondPlayerCompetitiveData,
-            rival: state?.firstPlayerCompetitiveData,
-          },
-    [
-      playerNumber,
-      state?.firstPlayerCompetitiveData,
-      state?.secondPlayerCompetitiveData,
-    ]
-  );
 
   const getPlayerInfo = (
     nameForSearch: string,
@@ -54,17 +21,17 @@ export default function useBattlePlayer(
   ) => {
     trigger({ userName: nameForSearch })
       .unwrap()
-      .then((res) => {
-        setter!(res, playerNumber);
+      .then((playerMainInfo) => {
+        setter!({ playerMainInfo, playerToUpdateId: playerId });
         setUserName("");
       })
       .catch((err) => {
-        setPlayerInputError!(
-          playersCardT("input_helper_text_error"),
-          playerNumber
-        );
+        setPlayerInputError!({
+          error: playersCardT("input_helper_text_error"),
+          playerToUpdateId: playerId,
+        });
         console.error(err);
       });
   };
-  return { currentUser, currentError, currentCompetitiveInfo, getPlayerInfo };
+  return { getPlayerInfo };
 }

@@ -3,13 +3,15 @@ import {
   IGitHubUserCompetitiveInfo,
 } from "../../../../store/services/models/battle";
 
-interface IBattlerPaggeInitialState {
-  firstPlayer: IGitHubUser | null;
-  secondPlayer: IGitHubUser | null;
-  firstPlayerInputError: string | null;
-  secondPlayerInputError: string | null;
-  firstPlayerCompetitiveData: IGitHubUserCompetitiveInfo | null;
-  secondPlayerCompetitiveData: IGitHubUserCompetitiveInfo | null;
+interface IBattlePagePlayer {
+  id: string;
+  mainInfo: IGitHubUser | null;
+  inputError: string | null;
+  competitiveData: IGitHubUserCompetitiveInfo | null;
 }
 
-export type { IBattlerPaggeInitialState };
+interface IBattlerPaggeInitialState {
+  players: IBattlePagePlayer[];
+}
+
+export type { IBattlerPaggeInitialState, IBattlePagePlayer };

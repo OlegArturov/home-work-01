@@ -1,21 +1,22 @@
 import { createContext } from "react";
 import { IBattlerPaggeInitialState } from "../pages/BattlePage/store/models/types";
 import {
-  IGetGithubUserReposResponseItem,
-  IGitHubUser,
-} from "../store/services/models/battle";
+  ISetPlayerCompetitiveDataPayload,
+  ISetPlayerInputErrorPayload,
+  ISetPlayerPayload,
+} from "../pages/BattlePage/store/actions";
 
 export type ISetPlayerForDisplay =
-  | ((name: IGitHubUser | null, playerNumber: number) => void)
+  | (({ playerMainInfo, playerToUpdateId }: ISetPlayerPayload) => void)
   | null;
 export type ISetPlayerInputError =
-  | ((error: string | null, playerNumber: number) => void)
+  | (({ error, playerToUpdateId }: ISetPlayerInputErrorPayload) => void)
   | null;
 export type ISetPlayerCompetitiveInfo =
-  | ((
-      data: Array<IGetGithubUserReposResponseItem> | null,
-      playerNumber: number
-    ) => void)
+  | (({
+      reposData,
+      playerToUpdateId,
+    }: ISetPlayerCompetitiveDataPayload) => void)
   | null;
 
 export interface IBattleContext {

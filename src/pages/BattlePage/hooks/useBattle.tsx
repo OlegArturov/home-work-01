@@ -1,12 +1,12 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useMemo, useReducer } from "react";
 import { initialState, reducer } from "../store/reducer";
 import {
-  IGetGithubUserReposResponseItem,
-  IGitHubUser,
-} from "../../../store/services/models/battle";
-import {
   actionCreatorForBattleStore,
   BattlerPageActionTypes,
+  ISetPlayerCompetitiveDataPayload,
+  ISetPlayerInputErrorPayload,
+  ISetPlayerPayload,
 } from "../store/actions";
 import { useLazyGetGitHubUsersReposQuery } from "../../../store/services/battle";
 
@@ -16,67 +16,61 @@ export default function useBattle() {
   const [getUserReposTrigger] = useLazyGetGitHubUsersReposQuery();
 
   const isBattleReady = useMemo(
-    () => !!(state.firstPlayer && state.secondPlayer),
-    [state.firstPlayer, state.secondPlayer]
+    () => state.players?.every((player) => player.mainInfo),
+    [state.players]
   );
 
   const isBattleFinished = useMemo(
-    () =>
-      !!(state.firstPlayerCompetitiveData && state.secondPlayerCompetitiveData),
-    [state.firstPlayerCompetitiveData, state.secondPlayerCompetitiveData]
+    () => state.players?.every((player) => player.competitiveData),
+    [state.players]
   );
 
   const isBattleFinishedWithDraw = useMemo(
     () =>
-      state.firstPlayerCompetitiveData?.totalScore ===
-      state.secondPlayerCompetitiveData?.totalScore,
-    [state.firstPlayerCompetitiveData, state.secondPlayerCompetitiveData]
+      state.players?.every((player, index) => {
+        return (
+          player.competitiveData?.totalScore ===
+          state.players[index === 0 ? index : index - 1]?.competitiveData
+            ?.totalScore
+        );
+      }),
+    [state.players]
   );
 
-  const setPlayerForDisplay = (
-    user: IGitHubUser | null,
-    playerNumber: number
-  ) => {
+  const setPlayerForDisplay = (payload: ISetPlayerPayload) => {
     dispatch(
       actionCreatorForBattleStore(
-        playerNumber === 1
-          ? BattlerPageActionTypes.SET_FIRST_PLAYER_FOR_DISPLAY
-          : BattlerPageActionTypes.SET_SECOND_PLAYER_FOR_DISPLAY,
-        user
+        BattlerPageActionTypes.SET_PLAYER_FOR_DSPLAY,
+        payload
       )
     );
   };
 
-  const setPlayerInputError = (error: string | null, playerNumber: number) => {
+  const setPlayerInputError = (payload: ISetPlayerInputErrorPayload) => {
     dispatch(
       actionCreatorForBattleStore(
-        playerNumber === 1
-          ? BattlerPageActionTypes.SET_FIRST_PLAYER_INPUT_ERROR
-          : BattlerPageActionTypes.SET_SECOND_PLAYER_INPUT_ERROR,
-        error
+        BattlerPageActionTypes.SET_PLAYER_INPUT_ERROR,
+        payload
       )
     );
   };
 
   const setPlayerCompetitiveInfo = (
-    data: Array<IGetGithubUserReposResponseItem> | null,
-    playerNumber: number
+    payload: ISetPlayerCompetitiveDataPayload
   ) => {
     dispatch(
       actionCreatorForBattleStore(
-        playerNumber === 1
-          ? BattlerPageActionTypes.SET_FIRST_PLAYER_COMPETITIVE_DATA
-          : BattlerPageActionTypes.SET_SECOND_PLAYER_COMPETITIVE_DATA,
-        data
+        BattlerPageActionTypes.SET_PLAYER_COMPETITIVE_DATA,
+        payload
       )
     );
   };
 
-  const getUsersRepos = (userName: string, playerNumber: number) => {
+  const getUsersRepos = (userName: string, playerToUpdateId: string) => {
     getUserReposTrigger({ userName })
       .unwrap()
-      .then((res) => {
-        setPlayerCompetitiveInfo(res, playerNumber);
+      .then((reposData) => {
+        setPlayerCompetitiveInfo({ playerToUpdateId, reposData });
       })
       .catch((err) => console.error(err));
   };

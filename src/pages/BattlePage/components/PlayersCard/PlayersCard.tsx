@@ -9,12 +9,13 @@ import BattleContext, {
 import CompetitiveInfoList from "../CompetitiveInfoList/CompetitiveInfoList";
 import useBattlePlayer from "../../hooks/useBattlePlayer";
 import { styles } from "./styles";
+import { IBattlePagePlayer } from "../../store/models/types";
 
 export interface IPlayersCardProps {
-  playerNumber: number;
+  player: IBattlePagePlayer;
 }
 
-export default function PlayersCard({ playerNumber }: IPlayersCardProps) {
+export default function PlayersCard({ player }: IPlayersCardProps) {
   const { t: playersCardT } = useTranslation("base_translations", {
     keyPrefix: "pages.battle_page.players_card",
   });
@@ -22,24 +23,19 @@ export default function PlayersCard({ playerNumber }: IPlayersCardProps) {
 
   const {
     state,
-    setPlayerForDisplay,
-    setPlayerInputError,
     isBattleFinished,
     isBattleFinishedWithDraw,
+    setPlayerForDisplay,
+    setPlayerInputError,
   } = useContext<IBattleContext>(BattleContext);
 
-  const { currentCompetitiveInfo, currentError, currentUser, getPlayerInfo } =
-    useBattlePlayer(playerNumber, state!);
+  const { getPlayerInfo } = useBattlePlayer(player?.id);
 
   const [userName, setUserName] = useState<string>("");
 
   const onInputChange = (newValue: string) => {
-    const currentPlayerError =
-      playerNumber === 1
-        ? state?.firstPlayerInputError
-        : state?.secondPlayerInputError;
-    if (currentPlayerError) {
-      setPlayerInputError!(null, playerNumber);
+    if (player?.inputError) {
+      setPlayerInputError!({ error: null, playerToUpdateId: player?.id });
     }
     setUserName(newValue);
   };
@@ -57,7 +53,10 @@ export default function PlayersCard({ playerNumber }: IPlayersCardProps) {
 
   const onReset = () => {
     if (setPlayerForDisplay) {
-      setPlayerForDisplay(null, playerNumber);
+      setPlayerForDisplay({
+        playerMainInfo: null,
+        playerToUpdateId: player?.id,
+      });
     }
   };
 
@@ -67,31 +66,36 @@ export default function PlayersCard({ playerNumber }: IPlayersCardProps) {
         <Typography sx={styles.placement}>
           {playersCardT(
             `placement.${
-              currentCompetitiveInfo.current!.totalScore >
-              currentCompetitiveInfo.rival!.totalScore
+              state?.players.every(
+                (playerFromList) =>
+                  player!.competitiveData!.totalScore! >=
+                  playerFromList!.competitiveData!.totalScore!
+              )
                 ? "winner"
                 : "loser"
             }`
           )}
         </Typography>
       )}
-      {currentUser ? (
+      {player?.mainInfo ? (
         <>
           <CardMedia
             sx={styles.cardImage}
             component="img"
-            image={currentUser.avatar_url}
+            image={player?.mainInfo.avatar_url}
             alt="Avatar"
           />
           <Typography
             sx={styles.cardUserName}
-          >{`@${currentUser.login}`}</Typography>
+          >{`@${player?.mainInfo.login}`}</Typography>
         </>
       ) : (
         <>
           <Typography component={"h3"} sx={styles.cardTitle}>
             <Trans
-              i18nKey={playersCardT("main_title", { playerNumber })}
+              i18nKey={playersCardT("main_title", {
+                playerNumber: +player?.id + 1,
+              })}
               components={{
                 b: <b />,
               }}
@@ -102,21 +106,21 @@ export default function PlayersCard({ playerNumber }: IPlayersCardProps) {
               valueForInput={userName}
               setValueFromInput={(newValue) => onInputChange(newValue)}
               placeholder={playersCardT("input_placeholder") || ""}
-              name={`player${playerNumber}_input`}
-              id={`player${playerNumber}_input`}
-              isError={!!currentError}
-              heplerText={currentError || ""}
+              name={`player${player?.id}_input`}
+              id={`player${player?.id}_input`}
+              isError={!!player?.inputError}
+              heplerText={player?.inputError || ""}
             />
           </Box>
         </>
       )}
-      {currentCompetitiveInfo.current ? (
-        <CompetitiveInfoList playerNumber={playerNumber} />
+      {player?.competitiveData ? (
+        <CompetitiveInfoList playerCompetitiveInfo={player?.competitiveData} />
       ) : (
         <Box sx={styles.cardActions}>
           <Button
-            label={t(`actions.${currentUser ? "reset" : "submit"}`)}
-            onClick={currentUser ? onReset : onSubmit}
+            label={t(`actions.${player?.mainInfo ? "reset" : "submit"}`)}
+            onClick={player?.mainInfo ? onReset : onSubmit}
             type="button"
           />
         </Box>

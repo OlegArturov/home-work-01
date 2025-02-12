@@ -1,10 +1,5 @@
 import { SxProps, TextField } from "@mui/material";
-import React, {
-  ChangeEvent,
-  HTMLInputTypeAttribute,
-  useEffect,
-  useState,
-} from "react";
+import React, { HTMLInputTypeAttribute } from "react";
 
 export interface IBaseInputProps {
   valueForInput: string;
@@ -45,24 +40,10 @@ export default function BaseInput({
     },
   };
 
-  const [value, setValue] = useState<string>(valueForInput);
-
-  useEffect(() => {
-    if (valueForInput) setValue(valueForInput);
-  }, [valueForInput]);
-
-  const handleOnInputChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const newValue: string = e.target.value;
-    setValue(newValue);
-    setValueFromInput(newValue);
-  };
-
   return (
     <TextField
-      defaultValue={value}
-      onChange={(e) => handleOnInputChange(e)}
+      defaultValue={valueForInput}
+      onChange={(e) => setValueFromInput(e.target.value)}
       placeholder={placeholder || ""}
       sx={styles.textField}
       name={name}
