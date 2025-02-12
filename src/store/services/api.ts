@@ -22,6 +22,6 @@ const baseQuery: BaseQueryFn<
 export const api = createApi({
   reducerPath: "api",
   baseQuery,
-  tagTypes: [],
+  tagTypes: ["GitHubUserInfo"],
   endpoints: () => ({}),
 });
